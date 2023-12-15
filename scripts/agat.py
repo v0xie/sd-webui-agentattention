@@ -32,12 +32,13 @@ GitHub URL: https://github.com/v0xie/sd-webui-agentattention
 
 """
 
-class PassSettings:
-        def __init__(self, sx, sy, ratio, agent_ratio):
-                self.sx = sx
-                self.sy = sy
-                self.ratio = ratio
-                self.agent_ratio = agent_ratio
+# TODO: Refactor parameters into a class
+# class PassSettings:
+#         def __init__(self, sx, sy, ratio, agent_ratio):
+#                 self.sx = sx
+#                 self.sy = sy
+#                 self.ratio = ratio
+#                 self.agent_ratio = agent_ratio
 
 class AgentAttentionExtensionScript(scripts.Script):
         # Extension title in menu UI
