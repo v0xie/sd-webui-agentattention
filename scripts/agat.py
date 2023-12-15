@@ -123,7 +123,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                 sp_sy = getattr(p, "aa_sp_sy", sp_sy)
                 sp_ratio = getattr(p, "aa_sp_ratio", sp_ratio)
                 sp_agent_ratio = getattr(p, "aa_sp_agent_ratio", sp_agent_ratio)
-                use_fp32 = getattr(p, "aa_use_fp32", sp_agent_ratio)
+                use_fp32 = getattr(p, "aa_use_fp32", use_fp32)
 
                 p.extra_generation_params = {
                         "AgAt Active": active,
@@ -137,6 +137,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                         "AgAt Second Pass sy": sp_sy,
                         "AgAt Second Pass Ratio": sp_ratio,
                         "AgAt Second Pass Agent Ratio": sp_agent_ratio,
+                        "AgAt Use FP32 Precision": use_fp32,
                 }
                 self.create_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32)
         
