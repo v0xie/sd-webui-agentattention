@@ -1,9 +1,5 @@
-# sd-webui-cads
-### An implementation of the method in *CADS: Unleashing the Diversity of Diffusion Models through Condition-Annealed Sampling* in Automatic1111 WebUI.
-CADS greatly increases diversity of generated images by adding scheduled noise to the conditioning at inference time.
-
-![image](samples/comparison.png)
-
+# sd-webui-agentattention
+### An implementation of Agent Attention in Automatic1111 WebUI.
 
 ### PR's are welcome!
 
@@ -17,15 +13,15 @@ CADS greatly increases diversity of generated images by adding scheduled noise t
 - [ ] ControlNet support
 
 ## Credits
-- The authors of the original paper for their method (https://arxiv.org/abs/2310.17347):
+- The authors of the original paper for their method (https://arxiv.org/abs/2312.08874):
 	```
-	@misc{sadat2023cads,
-		title={CADS: Unleashing the Diversity of Diffusion Models through Condition-Annealed Sampling},
-		author={Seyedmorteza Sadat and Jakob Buhmann and Derek Bradely and Otmar Hilliges and Romann M. Weber},
-		year={2023},
-		eprint={2310.17347},
-		archivePrefix={arXiv},
-		primaryClass={cs.CV}
+	@misc{han2023agent,
+      title={Agent Attention: On the Integration of Softmax and Linear Attention}, 
+      author={Dongchen Han and Tianzhu Ye and Yizeng Han and Zhuofan Xia and Shiji Song and Gao Huang},
+      year={2023},
+      eprint={2312.08874},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
 	}
 	```
 - @udon-universe's extension templates (https://github.com/udon-universe/stable-diffusion-webui-extension-templates)
