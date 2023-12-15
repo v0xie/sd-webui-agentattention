@@ -1,6 +1,6 @@
 # sd-webui-agentattention
 ### An unofficial implementation of Agent Attention in Automatic1111 WebUI.
-This extension uses code from the official AgentAttention repository: https://github.com/LeapLabTHU/Agent-Attention
+Speed up image generation with improved image quality using Agent Attention. 
 
 ![image](samples/xyz_grid-2419-1-bicycle.png)
 
@@ -18,7 +18,7 @@ This extension uses code from the official AgentAttention repository: https://gi
       primaryClass={cs.CV}
 	}
 	```
-- Official code for Agent-Attention: https://github.com/LeapLabTHU/Agent-Attention
+- This extension uses code from the official AgentAttention repository: https://github.com/LeapLabTHU/Agent-Attention
 - @udon-universe's extension templates (https://github.com/udon-universe/stable-diffusion-webui-extension-templates)
 
 ### More samples 
