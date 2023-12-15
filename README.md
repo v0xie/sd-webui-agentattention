@@ -5,8 +5,8 @@ Speed up image generation with improved image quality using Agent Attention.
 ![image](samples/xyz_grid-2419-1-bicycle.png)
 
 ### Feature List / Todo
-[x] SD 1.5 Support
-[x] SD XL Support (Requires Max Downsample > 1. If anybody knows the ideal settings to get this to work, please open an Issue!)
+- [x] SD 1.5 Support
+- [x] SD XL Support (Requires Max Downsample > 1. If anybody knows the ideal settings to get this to work, please open an Issue!)
 
 ### Issues / Pull Requests are welcome!
 
