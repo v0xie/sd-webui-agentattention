@@ -66,6 +66,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                                 sp_ratio = gr.Slider(value = 0.4, minimum = 0.0, maximum = 1.0, step = 0.05, label="Ratio", elem_id = 'aa_sp_ratio')
                                 sp_agent_ratio = gr.Slider(value = 0.5, minimum = 0.0, maximum = 1.0, step = 0.05, label="Agent Ratio", elem_id = 'aa_sp_agent_ratio')
                         use_fp32 = gr.Checkbox(value=False, default=False, label="Use FP32 Precision (for SD2.1)", elem_id = 'aa_use_fp32')
+                        max_downsample = gr.Radio(choices=[1,2,4,8], value=1, default=1, label="Max Downsample", elem_id = 'aa_max_downsample', info="For SDXL set to values > 1")
                 active.do_not_save_to_config = True
                 use_sp.do_not_save_to_config = True
                 sp_step.do_not_save_to_config = True
@@ -78,6 +79,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                 sp_ratio.do_not_save_to_config = True
                 sp_agent_ratio.do_not_save_to_config = True
                 use_fp32.do_not_save_to_config = True
+                max_downsample.do_not_save_to_config = True
                 self.infotext_fields = [
                         (active, lambda d: gr.Checkbox.update(value='AgAt Active' in d)),
                         (use_sp, 'AgAt Use Second Pass'),
@@ -91,6 +93,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                         (sp_ratio, 'AgAt Second Pass Ratio'),
                         (sp_agent_ratio, 'AgAt Second Pass Agent Ratio'),
                         (use_fp32, 'AgAt Use FP32 Precision'),
+                        (max_downsample, 'AgAt Max Downsample'),
                 ]
                 self.paste_field_names = [
                         'aa_active',
@@ -105,11 +108,12 @@ class AgentAttentionExtensionScript(scripts.Script):
                         'aa_sp_ratio',
                         'aa_sp_agent_ratio',
                         'aa_use_fp32',
+                        'aa_max_downsample'
                 ]
 
-                return [active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32]
+                return [active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample]
 
-        def before_process_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, *args, **kwargs):
+        def before_process_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, *args, **kwargs):
                 active = getattr(p, "aa_active", active)
                 if active is False:
                         return
@@ -124,6 +128,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                 sp_ratio = getattr(p, "aa_sp_ratio", sp_ratio)
                 sp_agent_ratio = getattr(p, "aa_sp_agent_ratio", sp_agent_ratio)
                 use_fp32 = getattr(p, "aa_use_fp32", use_fp32)
+                max_downsample = getattr(p, "aa_max_downsample", max_downsample)
 
                 p.extra_generation_params = {
                         "AgAt Active": active,
@@ -138,18 +143,19 @@ class AgentAttentionExtensionScript(scripts.Script):
                         "AgAt Second Pass Ratio": sp_ratio,
                         "AgAt Second Pass Agent Ratio": sp_agent_ratio,
                         "AgAt Use FP32 Precision": use_fp32,
+                        "AgAt Max Downsample": max_downsample,
                 }
-                self.create_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32)
+                self.create_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample)
         
-        def create_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32):
+        def create_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample):
                 # Use lambda to call the callback function with the parameters to avoid global variables
-                y = lambda params: self.on_cfg_denoiser_callback(params, active=active, use_sp=use_sp, sp_step=sp_step, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, sp_sx=sp_sx, sp_sy=sp_sy, sp_ratio=sp_ratio, sp_agent_ratio=sp_agent_ratio, use_fp32=use_fp32)
+                y = lambda params: self.on_cfg_denoiser_callback(params, active=active, use_sp=use_sp, sp_step=sp_step, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, sp_sx=sp_sx, sp_sy=sp_sy, sp_ratio=sp_ratio, sp_agent_ratio=sp_agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample)
 
                 logger.debug('Hooked callbacks')
                 script_callbacks.on_cfg_denoiser(y)
                 script_callbacks.on_script_unloaded(self.unhook_callbacks)
 
-        def postprocess_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, *args, **kwargs):
+        def postprocess_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, *args, **kwargs):
                 self.unhook_callbacks()
 
         def unhook_callbacks(self):
@@ -157,24 +163,24 @@ class AgentAttentionExtensionScript(scripts.Script):
                 self.remove_patch()
                 script_callbacks.remove_current_script_callbacks()
 
-        def apply_patch(self, sx=2, sy=2, ratio=0.4, agent_ratio=0.95, use_fp32=False):
-                print(f'Applied patch with sx: {sx}, sy: {sy}, ratio: {ratio}, agent_ratio: {agent_ratio}, use_fp32: {use_fp32}')
-                agentsd.apply_patch(shared.sd_model, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, attn_precision='fp32' if use_fp32 else None)
+        def apply_patch(self, sx=2, sy=2, ratio=0.4, agent_ratio=0.95, use_fp32=False, max_downsample=1):
+                logger.debug('Applied patch with sx: %d, sy: %d, ratio: %f, agent_ratio: %f, use_fp32: %s, max_downsample: %d', sx, sy, ratio, agent_ratio, use_fp32, max_downsample)
+                agentsd.apply_patch(shared.sd_model, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, attn_precision='fp32' if use_fp32 else None, max_downsample=max_downsample)
 
         def remove_patch(self):
                 logger.debug('Removed patch')
                 agentsd.remove_patch(shared.sd_model)
 
-        def on_cfg_denoiser_callback(self, params: CFGDenoiserParams, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, *args, **kwargs):
+        def on_cfg_denoiser_callback(self, params: CFGDenoiserParams, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, *args, **kwargs):
                 sampling_step = params.sampling_step
 
                 if sampling_step == 0:
-                        self.apply_patch(sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, use_fp32=use_fp32)
+                        self.apply_patch(sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample)
 
                 if sampling_step == sp_step:
                         self.remove_patch()
                         if use_sp:
-                                self.apply_patch(sx=sp_sx, sy=sp_sy, ratio=sp_ratio, agent_ratio=sp_agent_ratio, use_fp32=use_fp32)
+                                self.apply_patch(sx=sp_sx, sy=sp_sy, ratio=sp_ratio, agent_ratio=sp_agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample)
 
 
 # XYZ Plot
@@ -209,6 +215,7 @@ def make_axis_options():
                 xyz_grid.AxisOption("[AgentAttention] Second Pass Ratio", float, aa_apply_field("aa_sp_ratio")),
                 xyz_grid.AxisOption("[AgentAttention] Second Pass Agent Ratio", float, aa_apply_field("aa_sp_agent_ratio")),
                 xyz_grid.AxisOption("[AgentAttention] Use FP32", str, aa_apply_override('aa_use_fp32', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
+                xyz_grid.AxisOption("[AgentAttention] Max Downsample", int, aa_apply_field('aa_max_downsample')),
         }
         if not any("[AgentAttention]" in x.label for x in xyz_grid.axis_options):
                 xyz_grid.axis_options.extend(extra_axis_options)
