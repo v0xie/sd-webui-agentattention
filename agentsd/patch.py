@@ -111,7 +111,7 @@ def make_agent_attn(block_class: Type[torch.nn.Module], k_scale2, k_shortcut, at
             self.k_shortcut = k_shortcut
             self.attn_precision = attn_precision
 
-        def forward(self, x, agent=None, context=None, mask=None):
+        def forward(self, x, agent=None, context=None, mask=None, *args, **kwargs):
             if agent is not None:
                 if agent.shape[1] * 2 < x.shape[1]:
                     k_scale2 = self.k_scale2
