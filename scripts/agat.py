@@ -158,7 +158,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                 script_callbacks.remove_current_script_callbacks()
 
         def apply_patch(self, sx=2, sy=2, ratio=0.4, agent_ratio=0.95, use_fp32=False):
-                logger.debug(f'Applied patch with sx: {sx}, sy: {sy}, ratio: {ratio}, agent_ratio: {agent_ratio}, use_fp32: {use_fp32}')
+                print(f'Applied patch with sx: {sx}, sy: {sy}, ratio: {ratio}, agent_ratio: {agent_ratio}, use_fp32: {use_fp32}')
                 agentsd.apply_patch(shared.sd_model, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, attn_precision='fp32' if use_fp32 else None)
 
         def remove_patch(self):
@@ -174,7 +174,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                 if sampling_step == sp_step:
                         self.remove_patch()
                         if use_sp:
-                                self.apply_patch(shared.sd_model, sx=sp_sx, sy=sp_sy, ratio=sp_ratio, agent_ratio=sp_agent_ratio, use_fp32=use_fp32)
+                                self.apply_patch(sx=sp_sx, sy=sp_sy, ratio=sp_ratio, agent_ratio=sp_agent_ratio, use_fp32=use_fp32)
 
 
 # XYZ Plot
