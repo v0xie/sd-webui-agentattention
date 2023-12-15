@@ -55,15 +55,15 @@ class AgentAttentionExtensionScript(scripts.Script):
                         use_sp = gr.Checkbox(value=True, default=True, label="Use Second Pass", elem_id = 'aa_use_sp')
                         sp_step = gr.Slider(value = 20, minimum = 0, maximum = 100, step = 1, label="Second Pass Step", elem_id = 'aa_sp_step')
                         with gr.Accordion('First Pass', open=False):
-                                sx = gr.Slider(value = 0.2, minimum = 0.0, maximum = 1.0, step = 0.05, label="sx", elem_id = 'aa_sx')
-                                sy = gr.Slider(value = 0.2, minimum = 0.0, maximum = 1.0, step = 0.05, label="sy", elem_id = 'aa_sy')
+                                sx = gr.Slider(value = 4, minimum = 0, maximum = 10, step = 1, label="sx", elem_id = 'aa_sx')
+                                sy = gr.Slider(value = 4, minimum = 0, maximum = 10, step = 1, label="sy", elem_id = 'aa_sy')
                                 ratio = gr.Slider(value = 0.4, minimum = 0.0, maximum = 1.0, step = 0.05, label="Ratio", elem_id = 'aa_ratio')
                                 agent_ratio = gr.Slider(value = 0.95, minimum = 0.0, maximum = 1.0, step = 0.05, label="Agent Ratio", elem_id = 'aa_agent_ratio')
                         with gr.Accordion('Second Pass', open=False):
-                                sp_sx = gr.Slider(value = 0.2, minimum = 0.0, maximum = 1.0, step = 0.05, label="sx", elem_id = 'aa_sp_sx')
-                                sp_sy = gr.Slider(value = 0.2, minimum = 0.0, maximum = 1.0, step = 0.05, label="sy", elem_id = 'aa_sp_sy')
+                                sp_sx = gr.Slider(value = 2, minimum = 0, maximum = 10, step = 1, label="sx", elem_id = 'aa_sp_sx')
+                                sp_sy = gr.Slider(value = 2, minimum = 0, maximum = 10, step = 1, label="sy", elem_id = 'aa_sp_sy')
                                 sp_ratio = gr.Slider(value = 0.4, minimum = 0.0, maximum = 1.0, step = 0.05, label="Ratio", elem_id = 'aa_sp_ratio')
-                                sp_agent_ratio = gr.Slider(value = 0.95, minimum = 0.0, maximum = 1.0, step = 0.05, label="Agent Ratio", elem_id = 'aa_sp_agent_ratio')
+                                sp_agent_ratio = gr.Slider(value = 0.5, minimum = 0.0, maximum = 1.0, step = 0.05, label="Agent Ratio", elem_id = 'aa_sp_agent_ratio')
                 active.do_not_save_to_config = True
                 use_sp.do_not_save_to_config = True
                 sp_step.do_not_save_to_config = True
@@ -153,7 +153,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                 if sampling_step == sp_step:
                         self.remove_patch()
                         if use_sp:
-                                self.apply_patch(shared.sd_model, sx=sp_sx, sy=sp_sy, ratio = sp_ratio, agent_ratio=sp_agent_ratio)
+                                self.apply_patch(shared.sd_model, sx=sp_sx, sy=sp_sy, ratio=sp_ratio, agent_ratio=sp_agent_ratio)
 
 
 # XYZ Plot
@@ -179,12 +179,12 @@ def make_axis_options():
                 xyz_grid.AxisOption("[AgentAttention] Active", str, aa_apply_override('aa_active', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
                 xyz_grid.AxisOption("[AgentAttention] Use Second Pass", str, aa_apply_override('aa_use_sp', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
                 xyz_grid.AxisOption("[AgentAttention] Second Pass Step", int, aa_apply_field("aa_sp_step")),
-                xyz_grid.AxisOption("[AgentAttention] First Pass sx", float, aa_apply_field("aa_sx")),
-                xyz_grid.AxisOption("[AgentAttention] First Pass sy", float, aa_apply_field("aa_sy")),
+                xyz_grid.AxisOption("[AgentAttention] First Pass sx", int, aa_apply_field("aa_sx")),
+                xyz_grid.AxisOption("[AgentAttention] First Pass sy", int, aa_apply_field("aa_sy")),
                 xyz_grid.AxisOption("[AgentAttention] First Pass Ratio", float, aa_apply_field("aa_ratio")),
                 xyz_grid.AxisOption("[AgentAttention] First Pass Agent Ratio", float, aa_apply_field("aa_agent_ratio")),
-                xyz_grid.AxisOption("[AgentAttention] Second Pass sx", float, aa_apply_field("aa_sp_sx")),
-                xyz_grid.AxisOption("[AgentAttention] Second Pass sy", float, aa_apply_field("aa_sp_sy")),
+                xyz_grid.AxisOption("[AgentAttention] Second Pass sx", int, aa_apply_field("aa_sp_sx")),
+                xyz_grid.AxisOption("[AgentAttention] Second Pass sy", int, aa_apply_field("aa_sp_sy")),
                 xyz_grid.AxisOption("[AgentAttention] Second Pass Ratio", float, aa_apply_field("aa_sp_ratio")),
                 xyz_grid.AxisOption("[AgentAttention] Second Pass Agent Ratio", float, aa_apply_field("aa_sp_agent_ratio")),
         }
