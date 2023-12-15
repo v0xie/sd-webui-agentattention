@@ -64,6 +64,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                                 sp_sy = gr.Slider(value = 2, minimum = 0, maximum = 10, step = 1, label="sy", elem_id = 'aa_sp_sy')
                                 sp_ratio = gr.Slider(value = 0.4, minimum = 0.0, maximum = 1.0, step = 0.05, label="Ratio", elem_id = 'aa_sp_ratio')
                                 sp_agent_ratio = gr.Slider(value = 0.5, minimum = 0.0, maximum = 1.0, step = 0.05, label="Agent Ratio", elem_id = 'aa_sp_agent_ratio')
+                        use_fp32 = gr.Checkbox(value=False, default=False, label="Use FP32 Precision (for SD2.1)", elem_id = 'aa_use_fp32')
                 active.do_not_save_to_config = True
                 use_sp.do_not_save_to_config = True
                 sp_step.do_not_save_to_config = True
@@ -75,6 +76,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                 sp_sy.do_not_save_to_config = True
                 sp_ratio.do_not_save_to_config = True
                 sp_agent_ratio.do_not_save_to_config = True
+                use_fp32.do_not_save_to_config = True
                 self.infotext_fields = [
                         (active, lambda d: gr.Checkbox.update(value='AgAt Active' in d)),
                         (use_sp, 'AgAt Use Second Pass'),
@@ -87,10 +89,26 @@ class AgentAttentionExtensionScript(scripts.Script):
                         (sp_sy, 'AgAt Second Pass sy'),
                         (sp_ratio, 'AgAt Second Pass Ratio'),
                         (sp_agent_ratio, 'AgAt Second Pass Agent Ratio'),
+                        (use_fp32, 'AgAt Use FP32 Precision'),
                 ]
-                return [active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio]
+                self.paste_field_names = [
+                        'aa_active',
+                        'aa_use_sp',
+                        'aa_sp_step',
+                        'aa_sx',
+                        'aa_sy',
+                        'aa_ratio',
+                        'aa_agent_ratio',
+                        'aa_sp_sx',
+                        'aa_sp_sy',
+                        'aa_sp_ratio',
+                        'aa_sp_agent_ratio',
+                        'aa_use_fp32',
+                ]
 
-        def before_process_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, *args, **kwargs):
+                return [active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32]
+
+        def before_process_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, *args, **kwargs):
                 active = getattr(p, "aa_active", active)
                 if active is False:
                         return
@@ -104,31 +122,32 @@ class AgentAttentionExtensionScript(scripts.Script):
                 sp_sy = getattr(p, "aa_sp_sy", sp_sy)
                 sp_ratio = getattr(p, "aa_sp_ratio", sp_ratio)
                 sp_agent_ratio = getattr(p, "aa_sp_agent_ratio", sp_agent_ratio)
+                use_fp32 = getattr(p, "aa_use_fp32", sp_agent_ratio)
 
                 p.extra_generation_params = {
-                        "AgentAttention Active": active,
-                        "AgentAttention Use Second Pass": use_sp,
-                        "AgentAttention Second Pass Step": sp_step,
-                        "AgentAttention First Pass sx": sx,
-                        "AgentAttention First Pass sy": sy,
-                        "AgentAttention First Pass Ratio": ratio,
-                        "AgentAttention First Pass Agent Ratio": agent_ratio,
-                        "AgentAttention Second Pass sx": sp_sx,
-                        "AgentAttention Second Pass sy": sp_sy,
-                        "AgentAttention Second Pass Ratio": sp_ratio,
-                        "AgentAttention Second Pass Agent Ratio": sp_agent_ratio,
+                        "AgAt Active": active,
+                        "AgAt Use Second Pass": use_sp,
+                        "AgAt Second Pass Step": sp_step,
+                        "AgAt First Pass sx": sx,
+                        "AgAt First Pass sy": sy,
+                        "AgAt First Pass Ratio": ratio,
+                        "AgAt First Pass Agent Ratio": agent_ratio,
+                        "AgAt Second Pass sx": sp_sx,
+                        "AgAt Second Pass sy": sp_sy,
+                        "AgAt Second Pass Ratio": sp_ratio,
+                        "AgAt Second Pass Agent Ratio": sp_agent_ratio,
                 }
-                self.create_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio)
+                self.create_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32)
         
-        def create_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio):
+        def create_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32):
                 # Use lambda to call the callback function with the parameters to avoid global variables
-                y = lambda params: self.on_cfg_denoiser_callback(params, active=active, use_sp=use_sp, sp_step=sp_step, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, sp_sx=sp_sx, sp_sy=sp_sy, sp_ratio=sp_ratio, sp_agent_ratio=sp_agent_ratio)
+                y = lambda params: self.on_cfg_denoiser_callback(params, active=active, use_sp=use_sp, sp_step=sp_step, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, sp_sx=sp_sx, sp_sy=sp_sy, sp_ratio=sp_ratio, sp_agent_ratio=sp_agent_ratio, use_fp32=use_fp32)
 
                 logger.debug('Hooked callbacks')
                 script_callbacks.on_cfg_denoiser(y)
                 script_callbacks.on_script_unloaded(self.unhook_callbacks)
 
-        def postprocess_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, *args, **kwargs):
+        def postprocess_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, *args, **kwargs):
                 self.unhook_callbacks()
 
         def unhook_callbacks(self):
@@ -136,24 +155,24 @@ class AgentAttentionExtensionScript(scripts.Script):
                 self.remove_patch()
                 script_callbacks.remove_current_script_callbacks()
 
-        def apply_patch(self, sx=2, sy=2, ratio=0.4, agent_ratio=0.95):
-                logger.debug(f'Applied patch with sx: {sx}, sy: {sy}, ratio: {ratio}, agent_ratio: {agent_ratio}')
-                agentsd.apply_patch(shared.sd_model, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio)
+        def apply_patch(self, sx=2, sy=2, ratio=0.4, agent_ratio=0.95, use_fp32=False):
+                logger.debug(f'Applied patch with sx: {sx}, sy: {sy}, ratio: {ratio}, agent_ratio: {agent_ratio}, use_fp32: {use_fp32}')
+                agentsd.apply_patch(shared.sd_model, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, attn_precision='fp32' if use_fp32 else None)
 
         def remove_patch(self):
                 logger.debug('Removed patch')
                 agentsd.remove_patch(shared.sd_model)
 
-        def on_cfg_denoiser_callback(self, params: CFGDenoiserParams, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, *args, **kwargs):
+        def on_cfg_denoiser_callback(self, params: CFGDenoiserParams, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, *args, **kwargs):
                 sampling_step = params.sampling_step
 
                 if sampling_step == 0:
-                        self.apply_patch(sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio)
+                        self.apply_patch(sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, use_fp32=use_fp32)
 
                 if sampling_step == sp_step:
                         self.remove_patch()
                         if use_sp:
-                                self.apply_patch(shared.sd_model, sx=sp_sx, sy=sp_sy, ratio=sp_ratio, agent_ratio=sp_agent_ratio)
+                                self.apply_patch(shared.sd_model, sx=sp_sx, sy=sp_sy, ratio=sp_ratio, agent_ratio=sp_agent_ratio, use_fp32=use_fp32)
 
 
 # XYZ Plot
@@ -187,6 +206,7 @@ def make_axis_options():
                 xyz_grid.AxisOption("[AgentAttention] Second Pass sy", int, aa_apply_field("aa_sp_sy")),
                 xyz_grid.AxisOption("[AgentAttention] Second Pass Ratio", float, aa_apply_field("aa_sp_ratio")),
                 xyz_grid.AxisOption("[AgentAttention] Second Pass Agent Ratio", float, aa_apply_field("aa_sp_agent_ratio")),
+                xyz_grid.AxisOption("[AgentAttention] Use FP32", str, aa_apply_override('aa_use_fp32', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
         }
         if not any("[AgentAttention]" in x.label for x in xyz_grid.axis_options):
                 xyz_grid.axis_options.extend(extra_axis_options)
