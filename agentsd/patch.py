@@ -1,3 +1,13 @@
+'''
+This code from the following repository: https://github.com/LeapLabTHU/Agent-Attention
+
+@article{han2023agent,
+  title={Agent Attention: On the Integration of Softmax and Linear Attention},
+  author={Han, Dongchen and Ye, Tianzhu and Han, Yizeng and Xia, Zhuofan and Song, Shiji and Huang, Gao},
+  journal={arXiv preprint arXiv:2312.08874},
+  year={2023}
+}
+'''
 import torch
 import math
 from typing import Type, Dict, Any, Tuple, Callable
