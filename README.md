@@ -1,5 +1,6 @@
 # sd-webui-agentattention
 ### An unofficial implementation of Agent Attention in Automatic1111 WebUI.
+This extension uses code from the official AgentAttention repository: https://github.com/LeapLabTHU/Agent-Attention
 
 ### PR's are welcome!
 
