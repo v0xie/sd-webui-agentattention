@@ -58,13 +58,13 @@ class AgentAttentionExtensionScript(scripts.Script):
                         with gr.Accordion('First Pass', open=False):
                                 sx = gr.Slider(value = 4, minimum = 0, maximum = 10, step = 1, label="sx", elem_id = 'aa_sx')
                                 sy = gr.Slider(value = 4, minimum = 0, maximum = 10, step = 1, label="sy", elem_id = 'aa_sy')
-                                ratio = gr.Slider(value = 0.4, minimum = 0.0, maximum = 1.0, step = 0.05, label="Ratio", elem_id = 'aa_ratio')
-                                agent_ratio = gr.Slider(value = 0.95, minimum = 0.0, maximum = 1.0, step = 0.05, label="Agent Ratio", elem_id = 'aa_agent_ratio')
+                                ratio = gr.Slider(value = 0.4, minimum = 0.0, maximum = 1.0, step = 0.01, label="Ratio", elem_id = 'aa_ratio')
+                                agent_ratio = gr.Slider(value = 0.95, minimum = 0.0, maximum = 1.0, step = 0.01, label="Agent Ratio", elem_id = 'aa_agent_ratio')
                         with gr.Accordion('Second Pass', open=False):
                                 sp_sx = gr.Slider(value = 2, minimum = 0, maximum = 10, step = 1, label="sx", elem_id = 'aa_sp_sx')
                                 sp_sy = gr.Slider(value = 2, minimum = 0, maximum = 10, step = 1, label="sy", elem_id = 'aa_sp_sy')
-                                sp_ratio = gr.Slider(value = 0.4, minimum = 0.0, maximum = 1.0, step = 0.05, label="Ratio", elem_id = 'aa_sp_ratio')
-                                sp_agent_ratio = gr.Slider(value = 0.5, minimum = 0.0, maximum = 1.0, step = 0.05, label="Agent Ratio", elem_id = 'aa_sp_agent_ratio')
+                                sp_ratio = gr.Slider(value = 0.4, minimum = 0.0, maximum = 1.0, step = 0.01, label="Ratio", elem_id = 'aa_sp_ratio')
+                                sp_agent_ratio = gr.Slider(value = 0.5, minimum = 0.0, maximum = 1.0, step = 0.01, label="Agent Ratio", elem_id = 'aa_sp_agent_ratio')
                         use_fp32 = gr.Checkbox(value=False, default=False, label="Use FP32 Precision (for SD2.1)", elem_id = 'aa_use_fp32')
                         max_downsample = gr.Radio(choices=[1,2,4,8], value=1, default=1, label="Max Downsample", elem_id = 'aa_max_downsample', info="For SDXL set to values > 1")
                 active.do_not_save_to_config = True
