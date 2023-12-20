@@ -67,6 +67,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                                 sp_agent_ratio = gr.Slider(value = 0.5, minimum = 0.0, maximum = 1.0, step = 0.01, label="Agent Ratio", elem_id = 'aa_sp_agent_ratio')
                         use_fp32 = gr.Checkbox(value=False, default=False, label="Use FP32 Precision (for SD2.1)", elem_id = 'aa_use_fp32')
                         max_downsample = gr.Radio(choices=[1,2,4,8], value=1, default=1, label="Max Downsample", elem_id = 'aa_max_downsample', info="For SDXL set to values > 1")
+                        hires_fix_only = gr.Checkbox(value=False, default=False, label="Apply to Hires. Fix Only", elem_id = 'aa_hires_fix_only')
                 active.do_not_save_to_config = True
                 use_sp.do_not_save_to_config = True
                 sp_step.do_not_save_to_config = True
@@ -80,6 +81,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                 sp_agent_ratio.do_not_save_to_config = True
                 use_fp32.do_not_save_to_config = True
                 max_downsample.do_not_save_to_config = True
+                hires_fix_only.do_not_save_to_config = True
                 self.infotext_fields = [
                         (active, lambda d: gr.Checkbox.update(value='AgAt Active' in d)),
                         (use_sp, 'AgAt Use Second Pass'),
@@ -94,6 +96,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                         (sp_agent_ratio, 'AgAt Second Pass Agent Ratio'),
                         (use_fp32, 'AgAt Use FP32 Precision'),
                         (max_downsample, 'AgAt Max Downsample'),
+                        (hires_fix_only, 'AgAt Apply to Hires. Fix Only'),
                 ]
                 self.paste_field_names = [
                         'aa_active',
@@ -109,28 +112,47 @@ class AgentAttentionExtensionScript(scripts.Script):
                         'aa_sp_agent_ratio',
                         'aa_use_fp32',
                         'aa_max_downsample'
+                        'aa_hires_fix_only'
                 ]
 
-                return [active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample]
+                return [active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only]
 
-        def before_process_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, *args, **kwargs):
+        def before_process_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, *args, **kwargs):
                 active = getattr(p, "aa_active", active)
                 if active is False:
                         return
-                use_sp = getattr(p, "aa_use_sp", use_sp)
-                sp_step = getattr(p, "aa_sp_step", sp_step)
-                sx = getattr(p, "aa_sx", sx)
-                sy = getattr(p, "aa_sy", sy)
-                ratio = getattr(p, "aa_ratio", ratio)
-                agent_ratio = getattr(p, "aa_agent_ratio", agent_ratio)
-                sp_sx = getattr(p, "aa_sp_sx", sp_sx)
-                sp_sy = getattr(p, "aa_sp_sy", sp_sy)
-                sp_ratio = getattr(p, "aa_sp_ratio", sp_ratio)
-                sp_agent_ratio = getattr(p, "aa_sp_agent_ratio", sp_agent_ratio)
-                use_fp32 = getattr(p, "aa_use_fp32", use_fp32)
-                max_downsample = getattr(p, "aa_max_downsample", max_downsample)
 
-                p.extra_generation_params = {
+                hires_fix_only = getattr(p, "aa_hires_fix_only", hires_fix_only)
+                if hires_fix_only is True:
+
+                        p.extra_generation_params = {
+                                "AgAt Active": active,
+                                "AgAt Apply to Hires. Fix Only": hires_fix_only,
+                        }
+                        logger.debug('Hires. Fix Only is True, skipping')
+                        return
+
+                return self.setup_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only)
+
+        def setup_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only):
+            active = getattr(p, "aa_active", active)
+            if active is False:
+                    return
+            use_sp = getattr(p, "aa_use_sp", use_sp)
+            sp_step = getattr(p, "aa_sp_step", sp_step)
+            sx = getattr(p, "aa_sx", sx)
+            sy = getattr(p, "aa_sy", sy)
+            ratio = getattr(p, "aa_ratio", ratio)
+            agent_ratio = getattr(p, "aa_agent_ratio", agent_ratio)
+            sp_sx = getattr(p, "aa_sp_sx", sp_sx)
+            sp_sy = getattr(p, "aa_sp_sy", sp_sy)
+            sp_ratio = getattr(p, "aa_sp_ratio", sp_ratio)
+            sp_agent_ratio = getattr(p, "aa_sp_agent_ratio", sp_agent_ratio)
+            use_fp32 = getattr(p, "aa_use_fp32", use_fp32)
+            max_downsample = getattr(p, "aa_max_downsample", max_downsample)
+            hires_fix_only = getattr(p, "aa_hires_fix_only", hires_fix_only)
+
+            p.extra_generation_params.update({
                         "AgAt Active": active,
                         "AgAt Use Second Pass": use_sp,
                         "AgAt Second Pass Step": sp_step,
@@ -144,18 +166,19 @@ class AgentAttentionExtensionScript(scripts.Script):
                         "AgAt Second Pass Agent Ratio": sp_agent_ratio,
                         "AgAt Use FP32 Precision": use_fp32,
                         "AgAt Max Downsample": max_downsample,
-                }
-                self.create_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample)
+                        "AgAt Apply to Hires. Fix Only": hires_fix_only,
+                })
+            self.create_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only)
         
-        def create_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample):
+        def create_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only):
                 # Use lambda to call the callback function with the parameters to avoid global variables
-                y = lambda params: self.on_cfg_denoiser_callback(params, active=active, use_sp=use_sp, sp_step=sp_step, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, sp_sx=sp_sx, sp_sy=sp_sy, sp_ratio=sp_ratio, sp_agent_ratio=sp_agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample)
+                y = lambda params: self.on_cfg_denoiser_callback(params, active=active, use_sp=use_sp, sp_step=sp_step, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, sp_sx=sp_sx, sp_sy=sp_sy, sp_ratio=sp_ratio, sp_agent_ratio=sp_agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample, hires_fix_only=hires_fix_only)
 
                 logger.debug('Hooked callbacks')
                 script_callbacks.on_cfg_denoiser(y)
                 script_callbacks.on_script_unloaded(self.unhook_callbacks)
 
-        def postprocess_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, *args, **kwargs):
+        def postprocess_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, *args, **kwargs):
                 self.unhook_callbacks()
 
         def unhook_callbacks(self):
@@ -171,7 +194,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                 logger.debug('Removed patch')
                 agentsd.remove_patch(shared.sd_model)
 
-        def on_cfg_denoiser_callback(self, params: CFGDenoiserParams, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, *args, **kwargs):
+        def on_cfg_denoiser_callback(self, params: CFGDenoiserParams, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, *args, **kwargs):
                 sampling_step = params.sampling_step
 
                 if sampling_step == 0:
@@ -182,6 +205,25 @@ class AgentAttentionExtensionScript(scripts.Script):
                         if use_sp:
                                 self.apply_patch(sx=sp_sx, sy=sp_sy, ratio=sp_ratio, agent_ratio=sp_agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample)
 
+        def before_hr(self, p, *args, **kwargs):
+                self.unhook_callbacks()
+
+                params = getattr(p, "extra_generation_params", None)
+                if not params:
+                        logger.error("Missing attribute extra_generation_params")
+                        return
+
+                active = params.get("AgAt Active", False)
+                if active is False:
+                        return
+
+                apply_to_hr_pass = params.get("AgAt Apply to Hires. Fix Only", False)
+                if apply_to_hr_pass is False:
+                        logger.debug("Disabled for hires. fix")
+                        return
+
+                self.setup_hook(p, *args, **kwargs)
+                
 
 # XYZ Plot
 # Based on @mcmonkey4eva's XYZ Plot implementation here: https://github.com/mcmonkeyprojects/sd-dynamic-thresholding/blob/master/scripts/dynamic_thresholding.py
