@@ -56,7 +56,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                         with gr.Row():
                                 hires_fix_only = gr.Checkbox(value=False, default=False, label="Apply to Hires. Fix Only", elem_id = 'aa_hires_fix_only')
                                 use_fp32 = gr.Checkbox(value=False, default=False, label="Use FP32 Precision (for SD2.1)", elem_id = 'aa_use_fp32')
-                        use_sp = gr.Checkbox(value=True, default=False, label="Use Second Pass", elem_id = 'aa_use_sp')
+                        use_sp = gr.Checkbox(value=False, default=False, label="Use Second Pass", elem_id = 'aa_use_sp')
                         sp_step = gr.Slider(value = 20, minimum = 0, maximum = 100, step = 1, label="Second Pass Step", elem_id = 'aa_sp_step')
                         max_downsample = gr.Radio(choices=[1,2,4,8], value=1, default=1, label="Max Downsample", elem_id = 'aa_max_downsample', info="For SDXL set to values > 1")
                         with gr.Accordion('First Pass', open=False):
