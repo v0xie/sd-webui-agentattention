@@ -17,7 +17,6 @@ from .utils import isinstance_str, init_generator
 from torch import nn, einsum
 from einops import rearrange, repeat
 from inspect import isfunction
-import modules.sd_hijack
 
 
 def compute_merge(x: torch.Tensor, tome_info: Dict[str, Any]) -> Tuple[Callable, ...]:
