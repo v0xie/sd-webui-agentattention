@@ -199,6 +199,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                 sampling_step = params.sampling_step
 
                 if sampling_step == 0:
+                        self.remove_patch()
                         self.apply_patch(sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample)
 
                 if sampling_step == sp_step:
