@@ -139,7 +139,7 @@ class AgentAttentionExtensionScript(scripts.Script):
 
                 return [active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, merge_attn, merge_crossattn, merge_mlp, btn_remove_patch]
 
-        def before_process_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, *args, **kwargs):
+        def before_process_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, merge_attn, merge_crossattn, merge_mlp, *args, **kwargs):
                 active = getattr(p, "aa_active", active)
                 if active is False:
                         return
@@ -154,7 +154,7 @@ class AgentAttentionExtensionScript(scripts.Script):
                         logger.debug('Hires. Fix Only is True, skipping')
                         return
 
-                return self.setup_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only)
+                return self.setup_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, merge_attn, merge_crossattn, merge_mlp)
 
         def setup_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, merge_attn, merge_crossattn, merge_mlp, *args, **kwargs):
             active = getattr(p, "aa_active", active)
