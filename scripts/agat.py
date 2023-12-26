@@ -70,6 +70,11 @@ class AgentAttentionExtensionScript(scripts.Script):
                                 sp_ratio = gr.Slider(value = 0.4, minimum = 0.0, maximum = 1.0, step = 0.01, label="Ratio", elem_id = 'aa_sp_ratio')
                                 sp_agent_ratio = gr.Slider(value = 0.5, minimum = 0.0, maximum = 1.0, step = 0.01, label="Agent Ratio", elem_id = 'aa_sp_agent_ratio')
                         with gr.Accordion('Advanced', open=False):
+                                with gr.Row():
+                                        use_rand = gr.Checkbox(value=True, default=True, label="Use Random Perturbations", elem_id = 'aa_use_rand')
+                                        merge_attn = gr.Checkbox(value=True, default=True, label="Merge Attention", elem_id = 'aa_merge_attn', info='Recommended')
+                                        merge_crossattn = gr.Checkbox(value=False, default=False, label="Merge Cross Attention", elem_id = 'aa_merge_crossattn', info='Not recommended')
+                                        merge_mlp = gr.Checkbox(value=False, default=False, label="Merge MLP Layers", elem_id = 'aa_merge_mlp', info='Very not recommended')
                                 btn_remove_patch = gr.Button(value="Remove Patch", elem_id='aa_remove_patch')
                                 btn_remove_patch.click(self.remove_patch)
 
@@ -87,6 +92,10 @@ class AgentAttentionExtensionScript(scripts.Script):
                 use_fp32.do_not_save_to_config = True
                 max_downsample.do_not_save_to_config = True
                 hires_fix_only.do_not_save_to_config = True
+                use_rand.do_not_save_to_config = True
+                merge_attn.do_not_save_to_config = True
+                merge_crossattn.do_not_save_to_config = True
+                merge_mlp.do_not_save_to_config = True
                 self.infotext_fields = [
                         (active, lambda d: gr.Checkbox.update(value='AgAt Active' in d)),
                         (use_sp, 'AgAt Use Second Pass'),
@@ -102,6 +111,10 @@ class AgentAttentionExtensionScript(scripts.Script):
                         (use_fp32, 'AgAt Use FP32 Precision'),
                         (max_downsample, 'AgAt Max Downsample'),
                         (hires_fix_only, 'AgAt Apply to Hires. Fix Only'),
+                        (use_rand, 'AgAt Use Random Perturbations'),
+                        (merge_attn, 'AgAt Merge Attention'),
+                        (merge_crossattn, 'AgAt Merge Cross Attention'),
+                        (merge_mlp, 'AgAt Merge MLP'),
                 ]
                 self.paste_field_names = [
                         'aa_active',
@@ -116,11 +129,15 @@ class AgentAttentionExtensionScript(scripts.Script):
                         'aa_sp_ratio',
                         'aa_sp_agent_ratio',
                         'aa_use_fp32',
-                        'aa_max_downsample'
-                        'aa_hires_fix_only'
+                        'aa_max_downsample',
+                        'aa_hires_fix_only',
+                        'aa_use_rand',
+                        'aa_merge_attn',
+                        'aa_merge_crossattn',
+                        'aa_merge_mlp',
                 ]
 
-                return [active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only]
+                return [active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, merge_attn, merge_crossattn, merge_mlp, btn_remove_patch]
 
         def before_process_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, *args, **kwargs):
                 active = getattr(p, "aa_active", active)
@@ -139,7 +156,7 @@ class AgentAttentionExtensionScript(scripts.Script):
 
                 return self.setup_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only)
 
-        def setup_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only):
+        def setup_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, merge_attn, merge_crossattn, merge_mlp, *args, **kwargs):
             active = getattr(p, "aa_active", active)
             if active is False:
                     return
@@ -156,6 +173,10 @@ class AgentAttentionExtensionScript(scripts.Script):
             use_fp32 = getattr(p, "aa_use_fp32", use_fp32)
             max_downsample = getattr(p, "aa_max_downsample", max_downsample)
             hires_fix_only = getattr(p, "aa_hires_fix_only", hires_fix_only)
+            use_rand = getattr(p, "aa_use_rand", use_rand)
+            merge_attn = getattr(p, "aa_merge_attn", merge_attn)
+            merge_crossattn = getattr(p, "aa_merge_crossattn", merge_crossattn)
+            merge_mlp = getattr(p, "aa_merge_mlp", merge_mlp)
 
             p.extra_generation_params.update({
                         "AgAt Active": active,
@@ -172,18 +193,22 @@ class AgentAttentionExtensionScript(scripts.Script):
                         "AgAt Use FP32 Precision": use_fp32,
                         "AgAt Max Downsample": max_downsample,
                         "AgAt Apply to Hires. Fix Only": hires_fix_only,
+                        "AgAt Use Random Perturbations": use_rand,
+                        "AgAt Merge Attention": merge_attn,
+                        "AgAt Merge Cross Attention": merge_crossattn,
+                        "AgAt Merge MLP": merge_mlp,
                 })
-            self.create_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only)
+            self.create_hook(p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, merge_attn, merge_crossattn, merge_mlp)
         
-        def create_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only):
+        def create_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, merge_attn, merge_crossattn, merge_mlp, *args, **kwargs):
                 # Use lambda to call the callback function with the parameters to avoid global variables
-                y = lambda params: self.on_cfg_denoiser_callback(params, active=active, use_sp=use_sp, sp_step=sp_step, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, sp_sx=sp_sx, sp_sy=sp_sy, sp_ratio=sp_ratio, sp_agent_ratio=sp_agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample, hires_fix_only=hires_fix_only)
+                y = lambda params: self.on_cfg_denoiser_callback(params, active=active, use_sp=use_sp, sp_step=sp_step, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, sp_sx=sp_sx, sp_sy=sp_sy, sp_ratio=sp_ratio, sp_agent_ratio=sp_agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample, hires_fix_only=hires_fix_only, use_rand=use_rand, merge_attn=merge_attn, merge_crossattn=merge_crossattn, merge_mlp=merge_mlp)
 
                 logger.debug('Hooked callbacks')
                 script_callbacks.on_cfg_denoiser(y)
                 script_callbacks.on_script_unloaded(self.unhook_callbacks)
 
-        def postprocess_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, *args, **kwargs):
+        def postprocess_batch(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, merge_attn, merge_crossattn, merge_mlp, *args, **kwargs):
                 self.unhook_callbacks()
 
         def unhook_callbacks(self):
@@ -191,25 +216,25 @@ class AgentAttentionExtensionScript(scripts.Script):
                 self.remove_patch()
                 script_callbacks.remove_current_script_callbacks()
 
-        def apply_patch(self, sx=2, sy=2, ratio=0.4, agent_ratio=0.95, use_fp32=False, max_downsample=1):
+        def apply_patch(self, sx=2, sy=2, ratio=0.4, agent_ratio=0.95, use_fp32=False, max_downsample=1, use_rand=True, merge_attn=True, merge_crossattn=False, merge_mlp=False):
                 logger.debug('Applied patch with sx: %d, sy: %d, ratio: %f, agent_ratio: %f, use_fp32: %s, max_downsample: %d', sx, sy, ratio, agent_ratio, use_fp32, max_downsample)
-                agentsd.apply_patch(shared.sd_model, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, attn_precision='fp32' if use_fp32 else None, max_downsample=max_downsample)
+                agentsd.apply_patch(shared.sd_model, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, attn_precision='fp32' if use_fp32 else None, max_downsample=max_downsample, use_rand=use_rand, merge_attn=merge_attn, merge_crossattn=merge_crossattn, merge_mlp=merge_mlp)
 
         def remove_patch(self):
                 logger.debug('Removed patch')
                 agentsd.remove_patch(shared.sd_model)
 
-        def on_cfg_denoiser_callback(self, params: CFGDenoiserParams, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, *args, **kwargs):
+        def on_cfg_denoiser_callback(self, params: CFGDenoiserParams, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, merge_attn, merge_crossattn, merge_mlp):
                 sampling_step = params.sampling_step
 
                 if sampling_step == 0:
                         self.remove_patch()
-                        self.apply_patch(sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample)
+                        self.apply_patch(sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample, use_rand=use_rand, merge_attn=merge_attn, merge_crossattn=merge_crossattn, merge_mlp=merge_mlp)
 
                 if sampling_step == sp_step:
                         self.remove_patch()
                         if use_sp:
-                                self.apply_patch(sx=sp_sx, sy=sp_sy, ratio=sp_ratio, agent_ratio=sp_agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample)
+                                self.apply_patch(sx=sp_sx, sy=sp_sy, ratio=sp_ratio, agent_ratio=sp_agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample, use_rand=use_rand, merge_attn=merge_attn, merge_crossattn=merge_crossattn, merge_mlp=merge_mlp)
 
         def before_hr(self, p, *args, **kwargs):
                 self.unhook_callbacks()
@@ -264,6 +289,10 @@ def make_axis_options():
                 xyz_grid.AxisOption("[AgentAttention] Second Pass Agent Ratio", float, aa_apply_field("aa_sp_agent_ratio")),
                 xyz_grid.AxisOption("[AgentAttention] Use FP32", str, aa_apply_override('aa_use_fp32', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
                 xyz_grid.AxisOption("[AgentAttention] Max Downsample", int, aa_apply_field('aa_max_downsample')),
+                xyz_grid.AxisOption("[AgentAttention] Use Random Perturbations", str, aa_apply_override('aa_use_rand', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
+                xyz_grid.AxisOption("[AgentAttention] Merge Attention", str, aa_apply_override('aa_merge_attn', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
+                xyz_grid.AxisOption("[AgentAttention] Merge Cross Attention", str, aa_apply_override('aa_merge_crossattn', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
+                xyz_grid.AxisOption("[AgentAttention] Merge MLP Layers", str, aa_apply_override('aa_merge_mlp', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
         }
         if not any("[AgentAttention]" in x.label for x in xyz_grid.axis_options):
                 xyz_grid.axis_options.extend(extra_axis_options)
