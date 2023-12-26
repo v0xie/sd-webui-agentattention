@@ -197,7 +197,6 @@ class AgentAttentionExtensionScript(scripts.Script):
 
         def remove_patch(self):
                 logger.debug('Removed patch')
-                print('Removed patch')
                 agentsd.remove_patch(shared.sd_model)
 
         def on_cfg_denoiser_callback(self, params: CFGDenoiserParams, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, *args, **kwargs):
