@@ -17,6 +17,7 @@ from .utils import isinstance_str, init_generator
 from torch import nn, einsum
 from einops import rearrange, repeat
 from inspect import isfunction
+import modules.sd_hijack
 
 
 def compute_merge(x: torch.Tensor, tome_info: Dict[str, Any]) -> Tuple[Callable, ...]:
@@ -374,6 +375,8 @@ def apply_patch(
             make_tome_block_fn = make_diffusers_tome_block if is_diffusers else make_tome_block
             module.__class__ = make_tome_block_fn(module.__class__)
             module._tome_info = diffusion_model._tome_info
+            module._old_attn1 = [module.attn1.__class__]
+            module._old_attn2 = [module.attn2.__class__]
             module.attn1.__class__ = make_agent_attn(module.attn1.__class__, k_scale2=k_scale2, k_shortcut=k_shortcut, attn_precision=attn_precision)
             module.attn2.__class__ = make_agent_attn(module.attn2.__class__, k_scale2=k_scale2, k_shortcut=k_shortcut, attn_precision=attn_precision)
             module.attn1.set_new_params()
@@ -407,5 +410,9 @@ def remove_patch(model: torch.nn.Module):
 
         if module.__class__.__name__ == "ToMeBlock":
             module.__class__ = module._parent
+        if hasattr(module, "_old_attn1"):
+            module.attn1.__class__ = module._old_attn1[0]
+        if hasattr(module, "_old_attn2"):
+            module.attn2.__class__ = module._old_attn2[0]
     
     return model
