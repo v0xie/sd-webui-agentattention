@@ -58,7 +58,7 @@ def compute_merge(x: torch.Tensor, tome_info: Dict[str, Any]) -> Tuple[Callable,
 
 
 
-def make_tome_block(block_class: Type[torch.nn.Module]) -> Type[torch.nn.Module]:
+def make_tome_block(block_class: Type[torch.nn.Module], old_forward) -> Type[torch.nn.Module]:
     """
     Make a patched class on the fly so we don't have to import any specific modules.
     This patch applies AgentSD and ToMe to the forward function of the block.
@@ -67,6 +67,7 @@ def make_tome_block(block_class: Type[torch.nn.Module]) -> Type[torch.nn.Module]
     class ToMeBlock(block_class):
         # Save for unpatching later
         _parent = block_class
+        _old_forward = old_forward
 
         def _forward(self, x: torch.Tensor, context: torch.Tensor = None) -> torch.Tensor:
             m_a, m_c, m_m, u_a, u_c, u_m = compute_merge(x, self._tome_info)
@@ -191,7 +192,7 @@ def make_agent_attn(block_class: Type[torch.nn.Module], k_scale2, k_shortcut, at
 
 
 
-def make_diffusers_tome_block(block_class: Type[torch.nn.Module]) -> Type[torch.nn.Module]:
+def make_diffusers_tome_block(block_class: Type[torch.nn.Module], old_forward) -> Type[torch.nn.Module]:
     """
     Make a patched class for a diffusers model.
     This patch applies ToMe to the forward function of the block.
@@ -199,6 +200,7 @@ def make_diffusers_tome_block(block_class: Type[torch.nn.Module]) -> Type[torch.
     class ToMeBlock(block_class):
         # Save for unpatching later
         _parent = block_class
+        _old_forward = old_forward
 
         def forward(
             self,
@@ -371,8 +373,12 @@ def apply_patch(
     for _, module in diffusion_model.named_modules():
         # If for some reason this has a different name, create an issue and I'll fix it
         if isinstance_str(module, "BasicTransformerBlock"):
+            module._old_class_= [module.__class__]
+            _old_forward = None
+            if hasattr(module, "_forward"):
+                _old_forward = [module._forward]
             make_tome_block_fn = make_diffusers_tome_block if is_diffusers else make_tome_block
-            module.__class__ = make_tome_block_fn(module.__class__)
+            module.__class__ = make_tome_block_fn(module.__class__, _old_forward)
             module._tome_info = diffusion_model._tome_info
             module._old_attn1 = [module.attn1.__class__]
             module._old_attn2 = [module.attn2.__class__]
@@ -408,7 +414,13 @@ def remove_patch(model: torch.nn.Module):
             module._tome_info["hooks"].clear()
 
         if module.__class__.__name__ == "ToMeBlock":
-            module.__class__ = module._parent
+            if hasattr(module, "_old_forward"):
+                if module._old_forward is not None:
+                    module._forward = module._old_forward[0]
+            if hasattr(module, "_old__class__"):
+                module.__class__ = module._old__class__[0]
+            else:
+                module.__class__ = module._parent
         if hasattr(module, "_old_attn1"):
             module.attn1.__class__ = module._old_attn1[0]
         if hasattr(module, "_old_attn2"):

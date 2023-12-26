@@ -56,8 +56,9 @@ class AgentAttentionExtensionScript(scripts.Script):
                         with gr.Row():
                                 hires_fix_only = gr.Checkbox(value=False, default=False, label="Apply to Hires. Fix Only", elem_id = 'aa_hires_fix_only')
                                 use_fp32 = gr.Checkbox(value=False, default=False, label="Use FP32 Precision (for SD2.1)", elem_id = 'aa_use_fp32')
-                        use_sp = gr.Checkbox(value=True, default=True, label="Use Second Pass", elem_id = 'aa_use_sp')
+                        use_sp = gr.Checkbox(value=True, default=False, label="Use Second Pass", elem_id = 'aa_use_sp')
                         sp_step = gr.Slider(value = 20, minimum = 0, maximum = 100, step = 1, label="Second Pass Step", elem_id = 'aa_sp_step')
+                        max_downsample = gr.Radio(choices=[1,2,4,8], value=1, default=1, label="Max Downsample", elem_id = 'aa_max_downsample', info="For SDXL set to values > 1")
                         with gr.Accordion('First Pass', open=False):
                                 sx = gr.Slider(value = 4, minimum = 0, maximum = 10, step = 1, label="sx", elem_id = 'aa_sx')
                                 sy = gr.Slider(value = 4, minimum = 0, maximum = 10, step = 1, label="sy", elem_id = 'aa_sy')
@@ -68,7 +69,10 @@ class AgentAttentionExtensionScript(scripts.Script):
                                 sp_sy = gr.Slider(value = 2, minimum = 0, maximum = 10, step = 1, label="sy", elem_id = 'aa_sp_sy')
                                 sp_ratio = gr.Slider(value = 0.4, minimum = 0.0, maximum = 1.0, step = 0.01, label="Ratio", elem_id = 'aa_sp_ratio')
                                 sp_agent_ratio = gr.Slider(value = 0.5, minimum = 0.0, maximum = 1.0, step = 0.01, label="Agent Ratio", elem_id = 'aa_sp_agent_ratio')
-                        max_downsample = gr.Radio(choices=[1,2,4,8], value=1, default=1, label="Max Downsample", elem_id = 'aa_max_downsample', info="For SDXL set to values > 1")
+                        with gr.Accordion('Advanced', open=False):
+                                btn_remove_patch = gr.Button(value="Remove Patch", elem_id='aa_remove_patch')
+                                btn_remove_patch.click(self.remove_patch)
+
                 active.do_not_save_to_config = True
                 use_sp.do_not_save_to_config = True
                 sp_step.do_not_save_to_config = True
