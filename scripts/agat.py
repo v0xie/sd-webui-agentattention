@@ -343,8 +343,8 @@ def aa_apply_field_sx_sy(field):
         if not hasattr(p, "aa_active"):
                 setattr(p, "aa_active", True)
         try:
-            # we split the string by ',' and convert each element to int
-            x = x.split(',')
+            # we split the string by ' ' and convert each element to int
+            x = x.split(' ')
             sx = int(x[0])
             sy = int(x[1])
         except Exception as e:
