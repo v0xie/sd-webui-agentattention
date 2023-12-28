@@ -34,54 +34,60 @@ GitHub URL: https://github.com/v0xie/sd-webui-agentattention
 
 # TODO: Refactor parameters into a class
 class AgentAttentionSettings:
-        def __init__(self, active=False, use_sp=True, sp_step=20, sx=4, sy=4, ratio=0.4, agent_ratio=0.95, sp_sx=2, sp_sy=2, sp_ratio=0.4, sp_agent_ratio=0.5, use_fp32=False, max_downsample=1, hires_fix_only=False):
+        def __init__(self, active=False, use_sp=True, sp_step=20, sx=4, sy=4, ratio=0.4, agent_ratio=0.95, sp_sx=2, sp_sy=2, sp_ratio=0.4, sp_agent_ratio=0.5, use_fp32=False, max_downsample=1, hires_fix_only=False, use_rand=True, k_scale2=0.3, k_shortcut=0.075):
 
                 # General settings
-                self.active = self.active,
-                self.use_sp = self.use_sp,
-                self.sp_step = self.sp_step, # If use_sp is False, this is the step where remove_patch is called
+                self.active = active,
+                self.use_sp = use_sp,
+                self.sp_step = sp_step, # If use_sp is False, this is the step where remove_patch is called
 
                 # First pass settings
-                self.sx = self.sx,
-                self.sy = self.sy,
-                self.ratio = self.ratio,
-                self.agent_ratio = self.agent_ratio,
+                self.sx = sx,
+                self.sy = sy,
+                self.ratio = ratio,
+                self.agent_ratio = agent_ratio,
 
                 # Second pass Settings
-                self.sp_sx = self.sp_sx,
-                self.sp_sy = self.sp_sy,
-                self.sp_ratio = self.sp_ratio,
-                self.sp_agent_ratio = self.sp_agent_ratio,
+                self.sp_sx = sp_sx,
+                self.sp_sy = sp_sy,
+                self.sp_ratio = sp_ratio,
+                self.sp_agent_ratio = sp_agent_ratio,
 
                 # Other
-                self.use_fp32 = self.use_fp32,
-                self.max_downsample = self.max_downsample,
-                self.hires_fix_only = self.hires_fix_only,
+                self.use_fp32 = use_fp32,
+                self.max_downsample = max_downsample,
+                self.hires_fix_only = hires_fix_only,
+                self.use_rand = use_rand,
+                self.k_scale2 = k_scale2,
+                self.k_shortcut = k_shortcut,
         
         def __str__(self) -> str:
                 """ Returns a string representation of the parameters """
-                return f"AgentAttentionSettings(active={self.active}, use_sp={self.use_sp}, sp_step={self.sp_step}, sx={self.sx}, sy={self.sy}, ratio={self.ratio}, agent_ratio={self.agent_ratio}, sp_sx={self.sp_sx}, sp_sy={self.sp_sy}, sp_ratio={self.sp_ratio}, sp_agent_ratio={self.sp_agent_ratio}, use_fp32={self.use_fp32}, max_downsample={self.max_downsample}, hires_fix_only={self.hires_fix_only})"
+                return f"AgentAttentionSettings(active={self.active}, use_sp={self.use_sp}, sp_step={self.sp_step}, sx={self.sx}, sy={self.sy}, ratio={self.ratio}, agent_ratio={self.agent_ratio}, sp_sx={self.sp_sx}, sp_sy={self.sp_sy}, sp_ratio={self.sp_ratio}, sp_agent_ratio={self.sp_agent_ratio}, use_fp32={self.use_fp32}, max_downsample={self.max_downsample}, hires_fix_only={self.hires_fix_only}, use_rand={self.use_rand}, k_scale2={self.k_scale2}, k_shortcut={self.k_shortcut})"
 
 
 # Takes all values for the parameters and returns an AgentAttentionSettings object
 def make_aa_settings(*args, **kwargs) -> AgentAttentionSettings:
     """ Returns an AgentAttentionSettings object with the given parameters"""
-    # args: active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only
+    # args: active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, k_scale2, k_shortcut
     aa_settings = AgentAttentionSettings(
-            active=kwargs.get('active', None),
-            use_sp=kwargs.get('use_sp', None),
-            sp_step=kwargs.get('sp_step', None),
-            sx=kwargs.get('sx', None),
-            sy=kwargs.get('sy', None),
-            ratio=kwargs.get('ratio', None),
-            agent_ratio=kwargs.get('agent_ratio', None),
-            sp_sx=kwargs.get('sp_sx', None),
-            sp_sy=kwargs.get('sp_sy', None),
-            sp_ratio=kwargs.get('sp_ratio', None),
-            sp_agent_ratio=kwargs.get('sp_agent_ratio', None),
-            use_fp32=kwargs.get('use_fp32', None),
-            max_downsample=kwargs.get('max_downsample', None),
-            hires_fix_only=kwargs.get('hires_fix_only', None),
+        active=kwargs.get('active', None),
+        use_sp=kwargs.get('use_sp', None),
+        sp_step=kwargs.get('sp_step', None),
+        sx=kwargs.get('sx', None),
+        sy=kwargs.get('sy', None),
+        ratio=kwargs.get('ratio', None),
+        agent_ratio=kwargs.get('agent_ratio', None),
+        sp_sx=kwargs.get('sp_sx', None),
+        sp_sy=kwargs.get('sp_sy', None),
+        sp_ratio=kwargs.get('sp_ratio', None),
+        sp_agent_ratio=kwargs.get('sp_agent_ratio', None),
+        use_fp32=kwargs.get('use_fp32', None),
+        max_downsample=kwargs.get('max_downsample', None),
+        hires_fix_only=kwargs.get('hires_fix_only', None),
+        use_rand=kwargs.get('use_rand', None),
+        k_scale2=kwargs.get('k_scale2', None),
+        k_shortcut=kwargs.get('k_shortcut', None)
     )
     return aa_settings
 
@@ -116,6 +122,10 @@ class AgentAttentionExtensionScript(scripts.Script):
                                 sp_ratio = gr.Slider(value = 0.4, minimum = 0.0, maximum = 1.0, step = 0.01, label="Ratio", elem_id = 'aa_sp_ratio')
                                 sp_agent_ratio = gr.Slider(value = 0.5, minimum = 0.0, maximum = 1.0, step = 0.01, label="Agent Ratio", elem_id = 'aa_sp_agent_ratio')
                         with gr.Accordion('Advanced', open=False):
+                                with gr.Row():
+                                    use_rand = gr.Checkbox(value=True, default=True, label="Use Random Perturbations", elem_id = 'aa_use_rand')
+                                    k_scale2 = gr.Slider(value = 0.3, minimum = 0.0, maximum = 1.0, step = 0.01, label="k_scale2", elem_id = 'aa_k_scale2')
+                                    k_shortcut = gr.Slider(value = 0.075, minimum = 0.0, maximum = 1.0, step = 0.005, label="k_shortcut", elem_id = 'aa_k_shortcut')
                                 btn_remove_patch = gr.Button(value="Remove Patch", elem_id='aa_remove_patch')
                                 btn_remove_patch.click(self.remove_patch)
 
@@ -133,6 +143,10 @@ class AgentAttentionExtensionScript(scripts.Script):
                 use_fp32.do_not_save_to_config = True
                 max_downsample.do_not_save_to_config = True
                 hires_fix_only.do_not_save_to_config = True
+                use_rand.do_not_save_to_config = True
+                k_scale2.do_not_save_to_config = True
+                k_shortcut.do_not_save_to_config = True
+            
                 self.infotext_fields = [
                         (active, lambda d: gr.Checkbox.update(value='AgAt Active' in d)),
                         (use_sp, 'AgAt Use Second Pass'),
@@ -148,6 +162,9 @@ class AgentAttentionExtensionScript(scripts.Script):
                         (use_fp32, 'AgAt Use FP32 Precision'),
                         (max_downsample, 'AgAt Max Downsample'),
                         (hires_fix_only, 'AgAt Apply to Hires. Fix Only'),
+                        (use_rand, 'AgAt Use Random Perturbations'),
+                        (k_scale2, 'AgAt k_scale2'),
+                        (k_shortcut, 'AgAt k_shortcut'),
                 ]
                 self.paste_field_names = [
                         'aa_active',
@@ -162,13 +179,16 @@ class AgentAttentionExtensionScript(scripts.Script):
                         'aa_sp_ratio',
                         'aa_sp_agent_ratio',
                         'aa_use_fp32',
-                        'aa_max_downsample'
-                        'aa_hires_fix_only'
+                        'aa_max_downsample',
+                        'aa_hires_fix_only',
+                        'aa_use_rand',
+                        'aa_k_scale2',
+                        'aa_k_shortcut',
                 ]
 
-                return [active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only]
+                return [active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, k_scale2, k_shortcut, btn_remove_patch]
         
-        def setup_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only):
+        def setup_hook(self, p, active, use_sp, sp_step, sx, sy, ratio, agent_ratio, sp_sx, sp_sy, sp_ratio, sp_agent_ratio, use_fp32, max_downsample, hires_fix_only, use_rand, k_scale2, k_shortcut, *args, **kwargs):
                 active = getattr(p, "aa_active", active)
                 if active is False:
                         return
@@ -185,6 +205,9 @@ class AgentAttentionExtensionScript(scripts.Script):
                 use_fp32 = getattr(p, "aa_use_fp32", use_fp32)
                 max_downsample = getattr(p, "aa_max_downsample", max_downsample)
                 hires_fix_only = getattr(p, "aa_hires_fix_only", hires_fix_only)
+                use_rand = getattr(p, "aa_use_rand", use_rand)
+                k_scale2 = getattr(p, "aa_k_scale2", k_scale2)
+                k_shortcut = getattr(p, "aa_k_shortcut", k_shortcut)
 
                 p.extra_generation_params.update({
                             "AgAt Active": active,
@@ -201,9 +224,12 @@ class AgentAttentionExtensionScript(scripts.Script):
                             "AgAt Use FP32 Precision": use_fp32,
                             "AgAt Max Downsample": max_downsample,
                             "AgAt Apply to Hires. Fix Only": hires_fix_only,
+                            "AgAt Use Random Perturbations": use_rand,
+                            "AgAt k_scale2": k_scale2,
+                            "AgAt k_shortcut": k_shortcut,
                     })
                 
-                aa_settings = make_aa_settings(active=active, use_sp=use_sp, sp_step=sp_step, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, sp_sx=sp_sx, sp_sy=sp_sy, sp_ratio=sp_ratio, sp_agent_ratio=sp_agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample, hires_fix_only=hires_fix_only)
+                aa_settings = make_aa_settings(active=active, use_sp=use_sp, sp_step=sp_step, sx=sx, sy=sy, ratio=ratio, agent_ratio=agent_ratio, sp_sx=sp_sx, sp_sy=sp_sy, sp_ratio=sp_ratio, sp_agent_ratio=sp_agent_ratio, use_fp32=use_fp32, max_downsample=max_downsample, hires_fix_only=hires_fix_only, use_rand=use_rand, k_scale2=k_scale2, k_shortcut=k_shortcut)
             
                 self.create_hook(p, aa_settings)
         
@@ -234,10 +260,13 @@ class AgentAttentionExtensionScript(scripts.Script):
                 logger.debug(f'Applied patch with {aa_settings}')
                 agentsd.apply_patch(
                     model = shared.sd_model, 
-                    sx = aa_settings.sx, 
-                    sy = aa_settings.sy,
-                    ratio = aa_settings.ratio,
-                    agent_ratio = aa_settings.agent_ratio,
+                    sx = sx, 
+                    sy = sy,
+                    ratio = ratio,
+                    agent_ratio = agent_ratio,
+                    use_rand = aa_settings.use_rand,
+                    k_scale2 = aa_settings.k_scale2,
+                    k_shortcut = aa_settings.k_shortcut,
                     attn_precision = 'fp32' if aa_settings.use_fp32 else None,
                     max_downsample = aa_settings.max_downsample
                 )
@@ -311,6 +340,9 @@ def make_axis_options():
                 xyz_grid.AxisOption("[AgentAttention] Second Pass Agent Ratio", float, aa_apply_field("aa_sp_agent_ratio")),
                 xyz_grid.AxisOption("[AgentAttention] Use FP32", str, aa_apply_override('aa_use_fp32', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
                 xyz_grid.AxisOption("[AgentAttention] Max Downsample", int, aa_apply_field('aa_max_downsample')),
+                xyz_grid.AxisOption("[AgentAttention] Use Random Perturbations", str, aa_apply_override('aa_use_rand', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
+                xyz_grid.AxisOption("[AgentAttention] k_scale2", float, aa_apply_field('aa_k_scale2')),
+                xyz_grid.AxisOption("[AgentAttention] k_shortcut", float, aa_apply_field('aa_k_shortcut')),
         }
         if not any("[AgentAttention]" in x.label for x in xyz_grid.axis_options):
                 xyz_grid.axis_options.extend(extra_axis_options)
