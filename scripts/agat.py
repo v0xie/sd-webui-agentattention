@@ -37,29 +37,29 @@ class AgentAttentionSettings:
         def __init__(self, active=False, use_sp=True, sp_step=20, sx=4, sy=4, ratio=0.4, agent_ratio=0.95, sp_sx=2, sp_sy=2, sp_ratio=0.4, sp_agent_ratio=0.5, use_fp32=False, max_downsample=1, hires_fix_only=False, use_rand=True, k_scale2=0.3, k_shortcut=0.075):
 
                 # General settings
-                self.active = active,
-                self.use_sp = use_sp,
-                self.sp_step = sp_step, # If use_sp is False, this is the step where remove_patch is called
+                self.active = active
+                self.use_sp = use_sp
+                self.sp_step = sp_step # If use_sp is False, this is the step where remove_patch is called
 
                 # First pass settings
-                self.sx = sx,
-                self.sy = sy,
-                self.ratio = ratio,
-                self.agent_ratio = agent_ratio,
+                self.sx = sx
+                self.sy = sy
+                self.ratio = ratio
+                self.agent_ratio = agent_ratio
 
                 # Second pass Settings
-                self.sp_sx = sp_sx,
-                self.sp_sy = sp_sy,
-                self.sp_ratio = sp_ratio,
-                self.sp_agent_ratio = sp_agent_ratio,
+                self.sp_sx = sp_sx
+                self.sp_sy = sp_sy
+                self.sp_ratio = sp_ratio
+                self.sp_agent_ratio = sp_agent_ratio
 
                 # Other
-                self.use_fp32 = use_fp32,
-                self.max_downsample = max_downsample,
-                self.hires_fix_only = hires_fix_only,
-                self.use_rand = use_rand,
-                self.k_scale2 = k_scale2,
-                self.k_shortcut = k_shortcut,
+                self.use_fp32 = use_fp32
+                self.max_downsample = max_downsample
+                self.hires_fix_only = hires_fix_only
+                self.use_rand = use_rand
+                self.k_scale2 = k_scale2
+                self.k_shortcut = k_shortcut
         
         def __str__(self) -> str:
                 """ Returns a string representation of the parameters """
