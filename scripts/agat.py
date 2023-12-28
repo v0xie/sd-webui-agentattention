@@ -352,10 +352,10 @@ def aa_apply_field_sx_sy(field):
             return
         if field == "aa_fp_sx_sy":
             setattr(p, "aa_sx", sx)
-            setattr(p, "aa_sx", sy)
+            setattr(p, "aa_sy", sy)
         if field == "aa_sp_sx_sy":
             setattr(p, "aa_sp_sx", sx)
-            setattr(p, "aa_sp_sx", sy)
+            setattr(p, "aa_sp_sy", sy)
 
     return fun
 
@@ -365,12 +365,12 @@ def make_axis_options():
                 xyz_grid.AxisOption("[AgentAttention] Active", str, aa_apply_override('aa_active', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
                 xyz_grid.AxisOption("[AgentAttention] Use Second Pass", str, aa_apply_override('aa_use_sp', boolean=True), choices=xyz_grid.boolean_choice(reverse=True)),
                 xyz_grid.AxisOption("[AgentAttention] Second Pass Step", int, aa_apply_field("aa_sp_step")),
-                xyz_grid.AxisOption("[AgentAttention] First Pass sx,sy", int, aa_apply_field_sx_sy("aa_fp_sx_sy")),
+                xyz_grid.AxisOption("[AgentAttention] First Pass sx,sy", str, aa_apply_field_sx_sy("aa_fp_sx_sy")),
                 xyz_grid.AxisOption("[AgentAttention] First Pass sx", int, aa_apply_field("aa_sx")),
                 xyz_grid.AxisOption("[AgentAttention] First Pass sy", int, aa_apply_field("aa_sy")),
                 xyz_grid.AxisOption("[AgentAttention] First Pass Ratio", float, aa_apply_field("aa_ratio")),
                 xyz_grid.AxisOption("[AgentAttention] First Pass Agent Ratio", float, aa_apply_field("aa_agent_ratio")),
-                xyz_grid.AxisOption("[AgentAttention] Second Pass sx,sy", int, aa_apply_field_sx_sy("aa_sp_sx_sy")),
+                xyz_grid.AxisOption("[AgentAttention] Second Pass sx,sy", str, aa_apply_field_sx_sy("aa_sp_sx_sy")),
                 xyz_grid.AxisOption("[AgentAttention] Second Pass sx", int, aa_apply_field("aa_sp_sx")),
                 xyz_grid.AxisOption("[AgentAttention] Second Pass sy", int, aa_apply_field("aa_sp_sy")),
                 xyz_grid.AxisOption("[AgentAttention] Second Pass Ratio", float, aa_apply_field("aa_sp_ratio")),
