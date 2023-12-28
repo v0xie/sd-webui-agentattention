@@ -375,8 +375,8 @@ def apply_patch(
         if isinstance_str(module, "BasicTransformerBlock"):
             module._old_class_= [module.__class__]
             _old_forward = None
-            if hasattr(module, "_forward"):
-                _old_forward = [module._forward]
+            #if hasattr(module, "_forward"):
+            #    _old_forward = [module._forward]
             make_tome_block_fn = make_diffusers_tome_block if is_diffusers else make_tome_block
             module.__class__ = make_tome_block_fn(module.__class__, _old_forward)
             module._tome_info = diffusion_model._tome_info
@@ -414,9 +414,9 @@ def remove_patch(model: torch.nn.Module):
             module._tome_info["hooks"].clear()
 
         if module.__class__.__name__ == "ToMeBlock":
-            if hasattr(module, "_old_forward"):
-                if module._old_forward is not None:
-                    module._forward = module._old_forward[0]
+            #if hasattr(module, "_old_forward"):
+            #    if module._old_forward is not None:
+            #        module._forward = module._old_forward[0]
             if hasattr(module, "_old__class__"):
                 module.__class__ = module._old__class__[0]
             else:
